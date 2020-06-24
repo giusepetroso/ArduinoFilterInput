@@ -15,13 +15,17 @@ public:
   int watch();
 
 private:
-  int _pin, 
+  int _pin, _inputState,
+    _lastInput, _lastFilter,
     _filterOn, _filterOff, 
     _delayOn, _delayOff, 
     _filterState, _delayState, 
     _filterOnTime, _filterOffTime, 
     _delayOnTime, _delayOffTime;
   bool _debug;
+  void _watchInput();
+  void _watchFilter();
+  void _debugLogs();
 };
 
 #endif

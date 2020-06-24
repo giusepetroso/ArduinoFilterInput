@@ -14,6 +14,9 @@ FilterInput::FilterInput(int pin, int filterOn, int filterOff, int delayOn, int 
   _filterOff = filterOff; //milliseconds should pass for unsetting filter
   _delayOn = delayOn;     //milliseconds should pass for setting return value
   _delayOff = delayOff;   //milliseconds should pass for unsetting return value
+  _inputState = 0;
+  _lastInput = 0;
+  _lastFilter = 0;
   _filterState = 0;
   _delayState = 0;
   _filterOnTime = 0;
@@ -25,21 +28,59 @@ FilterInput::FilterInput(int pin, int filterOn, int filterOff, int delayOn, int 
 
 int FilterInput::watch()
 {
-  // read the digital input
-  int input = digitalRead(_pin);
+  _watchInput(); // watch the input and manage the filter state
+  _watchFilter(); // watch the filter and manage the delay state
+  if (_debug)
+    _debugLogs(); // print debug stuff
+  return _delayState; // return the delay state
+}
+void FilterInput::_debugLogs()
+{
+  Serial.print("INPUT: ");
+  Serial.print(_inputState);
+  // Serial.print(" | FON: ");
+  // Serial.print(millis() - _filterOnTime);
+  // Serial.print(" / ");
+  // Serial.print(_filterOn);
+  // Serial.print(" | FOFF: ");
+  // Serial.print(millis() - _filterOffTime);
+  // Serial.print(" / ");
+  // Serial.print(_filterOff);
+  Serial.print(" | F: ");
+  Serial.print(_filterState);
+  // Serial.print(" | TON: ");
+  // Serial.print(millis() - _delayOnTime);
+  // Serial.print(" / ");
+  // Serial.print(_delayOn);
+  // Serial.print(" | TOFF: ");
+  // Serial.print(millis() - _delayOffTime);
+  // Serial.print(" / ");
+  // Serial.print(_delayOff);
+  Serial.print(" | T: ");
+  Serial.print(_delayState);
+  Serial.println("");
+}
 
-  // rising edge
-  bool risingEdge = input == 1 && _filterState == 0;
+void FilterInput::_watchInput()
+{
+  // read the digital input
+  _inputState = digitalRead(_pin);
+
+  // input rising edge
+  bool risingEdge = _inputState == 1 && _lastInput == 0;
   if (risingEdge)
     _filterOnTime = millis();
 
-  // falling edge
-  bool fallingEdge = input == 0 && _filterState == 1;
+  // input falling edge
+  bool fallingEdge = _inputState == 0 && _lastInput == 1;
   if (fallingEdge)
     _filterOffTime = millis();
 
+  // set input state
+  _lastInput = _inputState;
+
   // filter state management
-  if (input == 1)
+  if (_inputState == 1)
   {
     if (millis() - _filterOnTime >= _filterOn)
       _filterState = 1;
@@ -49,19 +90,32 @@ int FilterInput::watch()
     if (millis() - _filterOffTime >= _filterOff)
       _filterState = 0;
   }
+}
 
-  if (_debug)
+void FilterInput::_watchFilter()
+{
+  // filter rising edge
+  bool risingEdge = _filterState == 1 && _lastFilter == 0;
+  if (risingEdge)
+    _delayOnTime = millis();
+
+  // filter falling edge
+  bool fallingEdge = _filterState == 0 && _lastFilter == 1;
+  if (fallingEdge)
+    _delayOffTime = millis();
+
+  // set filter state
+  _lastFilter = _filterState;
+
+  // delay state management
+  if (_filterState == 1)
   {
-    Serial.print("INPUT: ");
-    Serial.print(input);
-    Serial.print(" | FILTER ON TIME: ");
-    Serial.print(millis() - _filterOnTime);
-    Serial.print(" | FILTER STATE: ");
-    Serial.print(_filterState);
-    Serial.print(" | FILTER OFF TIME: ");
-    Serial.print(millis() - _filterOnTime);
-    Serial.print(" | FILTER STATE: ");
-    Serial.print(_filterState);
-    Serial.println("");
+    if (millis() - _delayOnTime >= _delayOn)
+      _delayState = 1;
+  }
+  else
+  {
+    if (millis() - _delayOffTime >= _delayOff)
+      _delayState = 0;
   }
 }
