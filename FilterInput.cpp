@@ -6,7 +6,7 @@
 #include "Arduino.h"
 #include "FilterInput.h"
 
-FilterInput::FilterInput(int filterOn, int filterOff, bool debug)
+FilterInput::FilterInput(unsigned long filterOn, unsigned long filterOff, bool debug)
 {
   _filterOn = filterOn;   //milliseconds should pass for setting filter
   _filterOff = filterOff; //milliseconds should pass for unsetting filter
@@ -32,7 +32,7 @@ int FilterInput::watch(int input)
     _debugLogs();
 
   // return the filter state
-  return _filterState; 
+  return _filterState;
 }
 
 void FilterInput::_debugLogs()

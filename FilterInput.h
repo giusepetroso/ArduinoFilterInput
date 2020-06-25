@@ -11,14 +11,12 @@
 class FilterInput
 {
 public:
-  FilterInput(int filterOn, int filterOff, bool debug);
+  FilterInput(unsigned long filterOn, unsigned long filterOff, bool debug);
   int watch(int input);
 
 private:
-  int _inputState, _lastInput, 
-      _filterState, _lastFilter,
-      _filterOn, _filterOff,
-      _filterOnTime, _filterOffTime;
+  int _inputState, _lastInput, _filterState, _lastFilter;
+  unsigned long _filterOn, _filterOff, _filterOnTime, _filterOffTime;
   bool _debug;
   void _watchInput();
   void _debugLogs();
